@@ -19,7 +19,7 @@ export default (reducers: Object, getDefaultState: ?Function = Immutable.Map): F
       }
     }
 
-    return inputState
+    const ret = inputState
       .withMutations((temporaryState) => {
         reducerKeys.forEach((reducerName) => {
           const reducer = reducers[reducerName];
@@ -31,5 +31,17 @@ export default (reducers: Object, getDefaultState: ?Function = Immutable.Map): F
           temporaryState.set(reducerName, nextDomainState);
         });
       });
+
+    // This is a hack to serve Trumid during the transitional period
+    // from Omnistac-UI to trumid-fe.
+    // Because we used redux-immutable in Omnistac-UI and plain javascript
+    // in trumid-fe, we depend on destructuring state in the latter.
+    // By tacking on plain field references to the Immutable.Map, this will work
+    // without having to make a special selector depending on app platform.
+    reducerKeys.forEach(reducerName => {
+      ret[reducerName] = ret.get(reducerName);
+    });
+
+    return ret;
   };
 };
